@@ -1,0 +1,49 @@
+diff --git a/backend/src/main/java/dev/a2ahub/security/RateLimitFilter.java b/backend/src/main/java/dev/a2ahub/security/RateLimitFilter.java
+index b423d25..a82d882 100644
+--- a/backend/src/main/java/dev/a2ahub/security/RateLimitFilter.java
++++ b/backend/src/main/java/dev/a2ahub/security/RateLimitFilter.java
+@@ -102,6 +102,13 @@ public class RateLimitFilter extends OncePerRequestFilter {
+                                     HttpServletResponse response,
+                                     FilterChain filterChain) throws ServletException, IOException {
+ 
++        if (securityProperties != null
++                && securityProperties.getRateLimit() != null
++                && !securityProperties.getRateLimit().isEnabled()) {
++            filterChain.doFilter(request, response);
++            return;
++        }
++
+         RequestPath requestPath;
+         if (ServletRequestPathUtils.hasParsedRequestPath(request)) {
+             requestPath = ServletRequestPathUtils.getParsedRequestPath(request);
+diff --git a/backend/src/test/java/dev/a2ahub/security/RateLimitFilterTest.java b/backend/src/test/java/dev/a2ahub/security/RateLimitFilterTest.java
+index 8125e6e..e23a734 100644
+--- a/backend/src/test/java/dev/a2ahub/security/RateLimitFilterTest.java
++++ b/backend/src/test/java/dev/a2ahub/security/RateLimitFilterTest.java
+@@ -179,6 +179,26 @@ class RateLimitFilterTest {
+         assertThat(res2.getStatus()).isEqualTo(HttpStatus.TOO_MANY_REQUESTS.value());
+     }
+ 
++    @Test
++    @DisplayName("Should bypass rate limiting when disabled in SecurityProperties")
++    void shouldBypassRateLimitingWhenDisabled() throws ServletException, IOException {
++        SecurityProperties props = new SecurityProperties();
++        props.getRateLimit().setEnabled(false);
++        RateLimitFilter filter = new RateLimitFilter(1, 60, 10_000, objectMapper, props);
++
++        for (int i = 0; i < 3; i++) {
++            MockHttpServletRequest request = new MockHttpServletRequest("GET", "/api/v1/agents");
++            request.setRemoteAddr("192.168.1.100");
++            MockHttpServletResponse response = new MockHttpServletResponse();
++
++            filter.doFilterInternal(request, response, filterChain);
++
++            assertThat(response.getStatus()).isEqualTo(HttpStatus.OK.value());
++        }
++
++        verify(filterChain, times(3)).doFilter(any(), any());
++    }
++
+     @Test
+     @DisplayName("Should bound bucket cache size to prevent memory exhaustion (DoS)")
+     void shouldBoundBucketCacheSize() throws ServletException, IOException {

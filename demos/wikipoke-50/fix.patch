@@ -1,0 +1,62 @@
+diff --git a/src/lib/drift.ts b/src/lib/drift.ts
+index c004086..2739e90 100644
+--- a/src/lib/drift.ts
++++ b/src/lib/drift.ts
+@@ -264,7 +264,16 @@ function movedCitations(
+   for (const cite of citations) {
+     // ponytail: dates the line, not the number — an edit elsewhere on the line re-dates the
+     // citation too. Per-citation history (`git log -L`) if that ever hides a real move.
+-    const origin = origins[lines.findIndex((line) => line.includes(cite.raw))];
++    const origin = origins[lines.findIndex((line) => {
++      let start = 0;
++      while (true) {
++        const index = line.indexOf(cite.raw, start);
++        if (index < 0) return false;
++        const next = line[index + cite.raw.length];
++        if (next === undefined || !/\d/.test(next)) return true;
++        start = index + 1;
++      }
++    })];
+     if (!origin || !changesFor(origin).includes(cite.path)) continue;
+     const now = lineNow(hunksFor(origin, cite.path), cite.line);
+     if (now !== cite.line) moved.push({ raw: cite.raw, now });
+diff --git a/test/wikipoke.test.ts b/test/wikipoke.test.ts
+index 29bc500..633d0f2 100644
+--- a/test/wikipoke.test.ts
++++ b/test/wikipoke.test.ts
+@@ -930,6 +930,35 @@ test("drift carries a stale page's citations through the diff, so re-stamping ca
+   assert.match(out, /src\/billing\/invoice\.js:8 — that line changed, re-read it/);
+ });
+ 
++test("drift does not match a short citation inside a later line number", () => {
++  const source = Array.from({ length: 30 }, (_, i) => `line ${i + 1}`);
++  const root = repo({ "src/a.ts": source.join("\n") + "\n" });
++  seed(root);
++  page(root, "components/citations.md", {
++    sources: ["src/a.ts"],
++    body: "Older: `src/a.ts:20`.",
++  });
++  git(root, "add", "-A");
++  git(root, "commit", "-qm", "cite line 20");
++
++  const reshaped = source.slice();
++  reshaped.unshift("new 1", "new 2", "new 3", "new 4", "new 5");
++  reshaped.splice(19, 5); // Remove the five lines before old line 20, keeping that citation fixed.
++  put(root, "src/a.ts", reshaped.join("\n") + "\n");
++  git(root, "add", "-A");
++  git(root, "commit", "-qm", "reshape source without moving line 20");
++
++  page(root, "components/citations.md", {
++    sources: ["src/a.ts"],
++    body: "Older: `src/a.ts:20`.\n\nCurrent: `src/a.ts:2`.",
++  });
++  git(root, "add", "-A");
++  git(root, "commit", "-qm", "add current line 2 citation");
++
++  const drift = json<DriftJson>(root, "check", "drift", "--json");
++  assert.equal(drift.stale.find((page) => page.id === "components/citations"), undefined);
++});
++
+ test("lint warns about a citation that lands on the end of a block", () => {
+   const root = repo({ "src/cli.js": "function a() {\n  return 1;\n}\n" });
+   seed(root);
