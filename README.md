@@ -1,11 +1,8 @@
 # Live Client Demos
 
-## Support and full reports / automation
+A portfolio of independent software demonstrations and sample patches built against public issue reports.
 
-- **Survival Tip / Support the tool ($5+):** https://buy.stripe.com/3cIeVd8mObcK1xb0Whb7y0i
-- **Custom Automation Script / Full Script ($25):** https://buy.stripe.com/dRm3cv9qSeoWdfTgVfb7y0g
-
-Demonstration samples only. No customer data is included in this repository.
+**Scope:** examples only. The repository does not contain customer data, does not represent accepted upstream contributions, and does not guarantee bounty eligibility, acceptance, or payment.
 
 ## Samples
 
@@ -14,4 +11,15 @@ Demonstration samples only. No customer data is included in this repository.
 - [A2A Hub #50](demos/a2a-hub-50/README.md) — independent sample patch for honoring `rate-limit.enabled=false`; linked to the source issue and documented with test results and payment caveats.
 - [Wikipoke #50](demos/wikipoke-50/README.md) — independent sample patch preventing short citation line numbers from matching longer ones; linked to the source issue and documented with test results and payment caveats.
 
-The three issue-specific patches are unofficial samples based on public issues. They have not been submitted upstream, and acceptance, merging, and payment are not guaranteed.
+The three issue-specific patches are unofficial samples based on public issues. They have not been submitted upstream. Upstream maintainers have not endorsed these patches, and acceptance, merging, and payment are not guaranteed.
+
+## Optional independent services
+
+The following links are separate commercial offerings. They are not part of the open-source sample patches and do not represent sponsorship, endorsement, or payment by the upstream projects.
+
+- **Support / tip:** https://buy.stripe.com/3cIeVd8mObcK1xb0Whb7y0i
+- **Custom automation service:** https://buy.stripe.com/dRm3cv9qSeoWdfTgVfb7y0g
+
+## License and reuse
+
+No license is currently declared for this repository. Public visibility does not grant permission to reuse, modify, or redistribute the code. Contact the repository owner for permission before reusing any material.
